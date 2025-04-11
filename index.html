@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Tris con AI</title>
+  <style>
+    td {
+      width: 60px; height: 60px;
+      text-align: center; font-size: 2em;
+      border: 1px solid #000;
+      cursor: pointer;
+    }
+    table { border-collapse: collapse; }
+  </style>
+</head>
+<body>
+  <h2>Tris – Gioca contro l'AI</h2>
+  <table id="board"></table>
+
+  <script>
+    let board = [["", "", ""], ["", "", ""], ["", "", ""]];
+    let human = "O", ai = "X";
+
+    function drawBoard() {
+      let table = document.getElementById("board");
+      table.innerHTML = "";
+      for (let i = 0; i < 3; i++) {
+        let row = table.insertRow();
+        for (let j = 0; j < 3; j++) {
+          let cell = row.insertCell();
+          cell.textContent = board[i][j];
+          cell.onclick = () => {
+            if (board[i][j] === "") {
+              board[i][j] = human;
+              if (!checkWin(human)) {
+                let move = bestMove();
+                board[move.i][move.j] = ai;
+              }
+              drawBoard();
+              checkWin(ai);
+            }
+          };
+        }
+      }
+    }
+
+    function bestMove() {
+      let bestScore = -Infinity;
+      let move;
+      for (let i = 0; i < 3; i++) {
+        for (let j = 0; j < 3; j++) {
+          if (board[i][j] === "") {
+            board[i][j] = ai;
+            let score = minimax(board, 0, false);
+            board[i][j] = "";
+            if (score > bestScore) {
+              bestScore = score;
+              move = { i, j };
+            }
+          }
+        }
+      }
+      return move;
+    }
+
+    function minimax(board, depth, isMaximizing) {
+      let result = checkWinner();
+      if (result !== null) {
+        let scores = { X: 1, O: -1, tie: 0 };
+        return scores[result];
+      }
+
+      if (isMaximizing) {
+        let best = -Infinity;
+        for (let i = 0; i < 3; i++) {
+          for (let j = 0; j < 3; j++) {
+            if (board[i][j] === "") {
+              board[i][j] = ai;
+              let score = minimax(board, depth + 1, false);
+              board[i][j] = "";
+              best = Math.max(score, best);
+            }
+          }
+        }
+        return best;
+      } else {
+        let best = Infinity;
+        for (let i = 0; i < 3; i++) {
+          for (let j = 0; j < 3; j++) {
+            if (board[i][j] === "") {
+              board[i][j] = human;
+              let score = minimax(board, depth + 1, true);
+              board[i][j] = "";
+              best = Math.min(score, best);
+            }
+          }
+        }
+        return best;
+      }
+    }
+
+    function checkWinner() {
+      let winner = null;
+      let combos = [
+        [[0,0],[0,1],[0,2]], [[1,0],[1,1],[1,2]], [[2,0],[2,1],[2,2]],
+        [[0,0],[1,0],[2,0]], [[0,1],[1,1],[2,1]], [[0,2],[1,2],[2,2]],
+        [[0,0],[1,1],[2,2]], [[0,2],[1,1],[2,0]]
+      ];
+      for (let combo of combos) {
+        let [a,b,c] = combo;
+        if (board[a[0]][a[1]] && board[a[0]][a[1]] === board[b[0]][b[1]] &&
+            board[a[0]][a[1]] === board[c[0]][c[1]]) {
+          return board[a[0]][a[1]];
+        }
+      }
+      if (board.flat().every(cell => cell !== "")) return "tie";
+      return null;
+    }
+
+    function checkWin(player) {
+      let result = checkWinner();
+      if (result === player) {
+        alert(player + " ha vinto!");
+        board = [["", "", ""], ["", "", ""], ["", "", ""]];
+        drawBoard();
+        return true;
+      } else if (result === "tie") {
+        alert("Pareggio!");
+        board = [["", "", ""], ["", "", ""], ["", "", ""]];
+        drawBoard();
+        return true;
+      }
+      return false;
+    }
+
+    drawBoard();
+  </script>
+</body>
+</html>
